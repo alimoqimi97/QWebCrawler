@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     cout << "Enter your WebAddress :" << endl;
     qin >> WebAddress;
 
-    cout << "Depth = " << endl;
+    cout << "Depth = ";
     qin >> Depth;
 
     WebCrawler.StartOrdering(WebAddress,Depth);

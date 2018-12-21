@@ -52,10 +52,10 @@ public:
     TNode<n> *Find(n & data);
     QList<TNode<n> *> getANodeChilds(n & data);
 
-    bool Contains(n & data)
-    {
-        //          inorder the tree + searching in ascending list for finding "data".//
-    }
+//    bool Contains(n & data)
+//    {
+//        //          inorder the tree + searching in ascending list for finding "data".//
+//    }
 
 /*
  * if the speed of the search() algorithm became low,

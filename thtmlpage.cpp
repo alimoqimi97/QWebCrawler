@@ -2,13 +2,13 @@
 
 THtmlPage::THtmlPage() :dwlutil(nullptr),Number(0),HtmlFile(nullptr)
 {
-    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
-    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
-    this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
-    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
+//    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+//    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
+//    this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
+//    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
 }
 
-THtmlPage::THtmlPage(const THtmlPage &other) :QObject(this)
+THtmlPage::THtmlPage(const THtmlPage &other,QObject * parent) :QObject(parent)
 {
     this->dwlutil = other.getDwlUtil();
     this->Number = other.getNumber();
@@ -24,6 +24,8 @@ THtmlPage THtmlPage::operator=(THtmlPage &other)
     this->DownloadQueue = other.getDownloadQueue();
     this->Address = other.getAddress();
     this->HtmlFile = other.getHtmlFile();
+
+    return *this;
 }
 
 
@@ -83,21 +85,42 @@ QList<QString> THtmlPage::getLinks()
     QString pattern = "href([*]|\n)*?=([*]|\n)*?";
     QString p = "(.*)";
     QList<QString> li;
-    int i = 0;
+//    int i = 0;
 
     p.prepend('"');
     p.append('"');
     pattern.append(p);
     QRegularExpression reg(pattern);
-    QRegularExpressionMatch matched;
 
-    matched = reg.match(*HtmlFile);
-
-    while(matched.hasMatch())
+    //          testing             //
+    if(this->HtmlFile == nullptr)
     {
-        li.push_back(matched.captured(i));
-        i++;
+        cout << "file isn't downloaded..." << endl;
+        exit(0);
     }
+    //          =======             //
+
+    QRegularExpressionMatchIterator itr = reg.globalMatch(*HtmlFile);
+
+    while(itr.hasNext())
+    {
+        QRegularExpressionMatch m = itr.next();
+
+        if(m.hasMatch())
+        {
+            li.push_back(m.captured(3));
+        }
+    }
+
+//    QRegularExpressionMatch matched;
+
+//    matched = reg.match(*HtmlFile);
+
+//    while(matched.hasMatch())
+//    {
+//        li.push_back(matched.captured(i));
+//        i++;
+//    }
 
     return li;
 }
@@ -112,16 +135,17 @@ void THtmlPage::ExtractLinksToDownloadQueue()
     }
 }
 
-void THtmlPage::DownLoadFile(QNetworkAccessManager &manager)
+void THtmlPage::DownLoadFile(QNetworkAccessManager &manager, int Dlevel)
 {
     QNetworkRequest rq;
-//    QByteArray * b = new QByteArray();
 
     rq.setUrl(QUrl(this->Address));
     this->dwlutil = manager.get(rq);
 
-//    *b = dwlutil->readAll();
-//    this->HtmlFile = b;
+    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
+    this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
+    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
 }
 
 void THtmlPage::NewFound()
@@ -139,12 +163,13 @@ void THtmlPage::SslErrorOccured()
     cout << "SslError occured..." << endl;
 }
 
-void THtmlPage::AfterDownload()
+void THtmlPage::AfterDownload(int depth)
 {
     QByteArray * b = new QByteArray();
 
     cout << "Download finished..." << endl;
     *b = this->dwlutil->readAll();
     this->HtmlFile = b;
+    this->ProcessDownloadedFile(depth);
 //    dwlutil->deleteLater();
 }

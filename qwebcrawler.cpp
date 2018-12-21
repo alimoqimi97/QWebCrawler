@@ -58,12 +58,13 @@ void QWebCrawler::StartOrdering(QString inlink, int dlevel)
     THtmlPage first;
 
     first.setAddress(inlink);
-    first.DownLoadFile(WebManager);
+    first.DownLoadFile(WebManager,dlevel);
     first.setNumber(0);
     n->setData(first);
     this->HtmlFiles.setRoot(n);
+    first.ConnectToWebCrawler(this);
 
-    this->ExecuteLevelDownloading(this->HtmlFiles.getRoot(),dlevel);
+//    this->ExecuteLevelDownloading(this->HtmlFiles.getRoot(),dlevel);
 }
 
 void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage> *current, int level)

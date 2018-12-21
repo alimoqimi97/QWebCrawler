@@ -49,6 +49,13 @@ public:
 signals:
 
 public slots:
+    //          undertesting part..         //
+    void StartLevelDownloading(int dlevel)
+    {
+        this->ExecuteLevelDownloading(this->HtmlFiles.getRoot(),dlevel);
+    }
+    //          ==================          //
+
 //    void NewFound();
 //    void ErrorOccured();
 //    void AfterDownload();
