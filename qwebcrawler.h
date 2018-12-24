@@ -10,6 +10,7 @@
 #include <QMap>
 #include <QList>
 #include <QString>
+#include <QDir>
 using namespace std;
 
 typedef QMap<QString,QList<QByteArray *>> mos;
@@ -20,10 +21,12 @@ class QWebCrawler : public QObject
 
 private:
     int DownloadLevel;
-    TTree<THtmlPage> HtmlFiles;
+    TTree<THtmlPage *> HtmlFiles;
     QList<QString> DownloadedLinks;
     QMap<QString,QList<QByteArray *>> DownloadedFiles;
     QNetworkAccessManager WebManager;
+    QDir DirMaker;
+    QString ProjectPath;
 
 public:
     explicit QWebCrawler(QObject *parent = 0);
@@ -32,8 +35,8 @@ public:
     void setDownloadLevel(int level);
     int getDownloadLevel();
 
-    void setHtmlFiles(TTree<THtmlPage> hf);
-    TTree<THtmlPage> getHtmlFiles();
+    void setHtmlFiles(TTree<THtmlPage *> hf);
+    TTree<THtmlPage *> getHtmlFiles();
 
     void setDownloadedLinks(QList<QString> & links);
     QList<QString> getDownloadedLinks();
@@ -43,18 +46,36 @@ public:
     //          ================            //
 
     //          public methods          //
-    void StartOrdering(QString inlink,int dlevel);
-    void ExecuteLevelDownloading(TNode<THtmlPage> * current,int level);
+    void StartOrdering(QString inlink);
+    void ExecuteLevelDownloading(TNode<THtmlPage *> *current);
+    void ConnectPage(THtmlPage *hp);
+
+    void MakeDirectory(QString address,QByteArray *htmlfile);
 
 signals:
 
 public slots:
-    //          undertesting part..         //
-    void StartLevelDownloading(int dlevel)
+    void StartLevelDownloading(THtmlPage * pag);
+
+    //              testing                 //
+    void printHtmlFiles()
     {
-        this->ExecuteLevelDownloading(this->HtmlFiles.getRoot(),dlevel);
+        QList<QByteArray *> ::iterator litr;
+        QTextStream t(stdout);
+
+        QList<QByteArray *> li = this->DownloadedFiles.value(".html");
+
+        t << "downloaded file number = " << li.size() << endl;
+
+        t << "Files : " << endl;
+        for(litr = li.begin() ; litr != li.end() ; litr++)
+        {
+            t << *litr << endl;
+        }
+
+//        this->HtmlFiles.PrintTree(HtmlFiles.getRoot(),t);
     }
-    //          ==================          //
+    //              ====================                //
 
 //    void NewFound();
 //    void ErrorOccured();

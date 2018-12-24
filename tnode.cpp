@@ -47,11 +47,11 @@ bool TNode<i>::IsInChilds(i &c)
     return this->Childs.contains(c);
 }
 
-template<typename e>
-bool TNode<e>::ChildsIsEmpty()
-{
-    return this->Childs.isEmpty();
-}
+//template<typename e>
+//bool TNode<e>::ChildsIsEmpty()
+//{
+//    return this->Childs.isEmpty();
+//}
 
 template<typename r>
 bool TNode<r>::IsRoot()

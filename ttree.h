@@ -2,6 +2,7 @@
 #define TTREE_H
 
 #include "tnode.h"
+#include <QTextStream>
 
 template<typename n>
 class TTree
@@ -12,9 +13,7 @@ private:
 
 public:
     TTree(): Root(nullptr),Size(0)
-    {
-
-    }
+    {}
 
     //          get and set methods     //
     void setRoot(TNode<n> * root)
@@ -44,13 +43,26 @@ public:
         if(parent != nullptr)
         {
             parent->AddToChilds(data);
+            ++Size;
             return true;
         }
         return false;
     }
 
-    TNode<n> *Find(n & data);
-    QList<TNode<n> *> getANodeChilds(n & data);
+    TNode<n> *Find(n &data)
+    {
+        TNode<n> * cur = this->Root;
+
+        return this->Search(cur,data);
+
+    }
+
+    bool isEmpty()
+    {
+        return (this->Root == nullptr);
+    }
+
+    QList<TNode<n> *> getANodeChilds(n &data);
 
 //    bool Contains(n & data)
 //    {
@@ -63,7 +75,60 @@ public:
  * in this case you can change the implementation of the
  * TTree with QMap<...> that you wrote...!!
 */
-    TNode<n> *Search(TNode<n> * current,n & data);
+    TNode<n> *Search(TNode<n> *current,n &data)
+    {
+        if(current == nullptr)
+        {
+            return nullptr;
+        }
+        if(current->getData() == data)
+        {
+            return current;
+        }
+
+        if(current->ChildsIsEmpty())
+        {
+            return nullptr;
+        }
+
+        for(int index = 0 ; index < current->getChilds().size() ;  index++)
+        {
+//            return this->Search(current->getChilds().at(index),data);
+            if(this->Search(current->getChilds().at(index),data) != nullptr)
+            {
+                return current->getChilds().at(index);
+            }
+        }
+
+        return nullptr;
+    }
+
+    void PrintTree(TNode<n> *cur,QTextStream & output)
+    {
+        output << *(cur->getData()) << endl;
+
+        //      testing             //
+//        output<< cur->getData() << endl;
+        //      =======             //
+
+        if(cur->ChildsIsEmpty())
+        {
+            return;
+        }
+
+        for(int i = 0 ; i < cur->getChilds().size() ; i++)
+        {
+            this->PrintTree(cur->getChilds().at(i),output);
+        }
+    }
+
+    void PrintAllTree()
+    {
+        QTextStream qprint(stdout);
+
+        this->PrintTree(this->Root,qprint);
+    }
+
 };
 
 #endif // TTREE_H

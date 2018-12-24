@@ -64,7 +64,11 @@ public:
     }
 
     bool IsInChilds(T & c);
-    bool ChildsIsEmpty();
+    bool ChildsIsEmpty()
+    {
+        return this->Childs.isEmpty();
+    }
+
     bool IsRoot();
 
 

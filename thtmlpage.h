@@ -1,7 +1,6 @@
 #ifndef THTMLPAGE_H
 #define THTMLPAGE_H
 
-//#include "qwebcrawler.h"
 #include <QRegularExpressionMatch>
 #include <QRegularExpression>
 #include <QRegularExpressionMatchIterator>
@@ -59,22 +58,27 @@ public:
     //          public methods      //
     QList<QString> getLinks();
     void ExtractLinksToDownloadQueue();
-    void DownLoadFile(QNetworkAccessManager & manager, int Dlevel);
-
-    void ConnectToWebCrawler(QWebCrawler *wb)
-    {
-        this->connect(this,SIGNAL(ProcessDownloadedFile(int)),wb,SLOT(StartLevelDownloading(int)));
-    }
+    void DownLoadFile(QNetworkAccessManager & manager);
+    void PrintHtmlCode();
 
     //          =============       //
 signals:
 
-    void ProcessDownloadedFile(int Depth);
+    void downloadFinished(int f);
+    void ProcessDownloadedFile(THtmlPage *page);
+
+    //          testing             //
+//    void End();
+    //          =======             //
+
 public slots:
     void NewFound();
     void NetworkErrorOccured();
     void SslErrorOccured();
-    void AfterDownload(int depth);
+    void AfterDownload(QNetworkReply *reply);
 };
+
+QTextStream & operator<<(QTextStream & sout,THtmlPage & p);
+
 
 #endif // THTMLPAGE_H

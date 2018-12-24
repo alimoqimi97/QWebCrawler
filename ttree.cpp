@@ -40,13 +40,13 @@
 //    return false;
 //}
 
-template<typename f>
-TNode<f> *TTree<f>::Find(f &data)
-{
-    TNode<f> * cur = this->Root;
+//template<typename f>
+//TNode<f> *TTree<f>::Find(f &data)
+//{
+//    TNode<f> * cur = this->Root;
 
-    return this->Search(cur,data);
-}
+//    return this->Search(cur,data);
+//}
 
 template<typename chil>
 QList<TNode<chil> *> TTree<chil>::getANodeChilds(chil &data)
@@ -56,29 +56,34 @@ QList<TNode<chil> *> TTree<chil>::getANodeChilds(chil &data)
     return f->getChilds();
 }
 
-template<typename Se>
-TNode<Se> *TTree<Se>::Search(TNode<Se> *current, Se &data)
-{
-    if(current == nullptr)
-    {
-        return nullptr;
-    }
-    if(current->getData() == data)
-    {
-        return current;
-    }
+//template<typename Se>
+//TNode<Se> *TTree<Se>::Search(TNode<Se> *current,Se &data)
+//{
+//    if(current == nullptr)
+//    {
+//        return nullptr;
+//    }
+//    if(current->getData() == data)
+//    {
+//        return current;
+//    }
 
-    if(current->ChildsIsEmpty())
-    {
-        return nullptr;
-    }
+//    if(current->ChildsIsEmpty())
+//    {
+//        return nullptr;
+//    }
 
-    for(int index = 0 ; index < current->getChilds().size() ;  index++)
-    {
-        if(this->Search(current->getChilds().at(index),data))
-        {
-            return current->getChilds().at(index);
-        }
-    }
+//    for(int index = 0 ; index < current->getChilds().size() ;  index++)
+//    {
+//        if(this->Search(current->getChilds().at(index),data))
+//        {
+//            return current->getChilds().at(index);
+//        }
+//    }
+//}
 
-}
+//template<typename k>
+//bool TTree<k>::isEmpty()
+//{
+//    return (this->Root == nullptr);
+//}

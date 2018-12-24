@@ -83,7 +83,7 @@ QByteArray *THtmlPage::getHtmlFile() const
 QList<QString> THtmlPage::getLinks()
 {
     QString pattern = "href([*]|\n)*?=([*]|\n)*?";
-    QString p = "(.*)";
+    QString p = "(.*?)";
     QList<QString> li;
 //    int i = 0;
 
@@ -135,17 +135,29 @@ void THtmlPage::ExtractLinksToDownloadQueue()
     }
 }
 
-void THtmlPage::DownLoadFile(QNetworkAccessManager &manager, int Dlevel)
+void THtmlPage::DownLoadFile(QNetworkAccessManager &manager)
 {
     QNetworkRequest rq;
 
     rq.setUrl(QUrl(this->Address));
+    rq.setRawHeader("User-Agent","MyOwnBrowser 1.0");
     this->dwlutil = manager.get(rq);
 
     this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
-    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
+    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(NetworkErrorOccured()));
     this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
-    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
+    this->connect(&manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(AfterDownload(QNetworkReply*)));
+}
+
+void THtmlPage::PrintHtmlCode()
+{
+    QTextStream t(stdout);
+
+    for(int i = 0 ; i < this->HtmlFile->size() ; i++)
+    {
+        t << this->HtmlFile->at(i) ;
+    }
+    t << endl;
 }
 
 void THtmlPage::NewFound()
@@ -155,21 +167,47 @@ void THtmlPage::NewFound()
 
 void THtmlPage::NetworkErrorOccured()
 {
+    cout << endl;
     cout << "Network error occured" << endl;
+    cout << "check your internet connection...!" << endl;
+    cout << endl;
+//    exit(0);
 }
 
 void THtmlPage::SslErrorOccured()
 {
     cout << "SslError occured..." << endl;
+    cout << this->dwlutil->errorString().toStdString() << endl;
 }
 
-void THtmlPage::AfterDownload(int depth)
+void THtmlPage::AfterDownload(QNetworkReply * reply)
 {
-    QByteArray * b = new QByteArray();
+//    if(reply->error() != QNetworkReply ::NoError)
+//    {
+//        cout << reply->errorString().toStdString();
+//    }
+//    else
+//    {
+        QByteArray * b = new QByteArray();
 
-    cout << "Download finished..." << endl;
-    *b = this->dwlutil->readAll();
-    this->HtmlFile = b;
-    this->ProcessDownloadedFile(depth);
-//    dwlutil->deleteLater();
+        this->dwlutil = reply;
+        cout << "Download finished..." << endl;
+
+        *b = this->dwlutil->readAll();
+        this->HtmlFile = b;
+        emit ProcessDownloadedFile(this);
+
+//        dwlutil->deleteLater();
+//    }
+}
+
+
+QTextStream &operator<<(QTextStream &sout, THtmlPage &p)
+{
+    sout << "Number = " << p.getNumber() << endl;
+    sout << "Address = " << p.getAddress() << endl;
+    sout << "HtmlCode = " << p.getHtmlFile() <<  endl ;
+//    p.PrintHtmlCode();
+
+    return sout;
 }

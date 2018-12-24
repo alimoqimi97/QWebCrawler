@@ -12,17 +12,18 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     QTextStream qin(stdin);
-    QWebCrawler WebCrawler;
+    QWebCrawler WebCrawler ;
     int Depth = 0;
     QString WebAddress;
 
-    cout << "Enter your WebAddress :" << endl;
+    cout << "Enter your WebAddress : ";
     qin >> WebAddress;
 
     cout << "Depth = ";
     qin >> Depth;
+    WebCrawler.setDownloadLevel(Depth);
 
-    WebCrawler.StartOrdering(WebAddress,Depth);
+    WebCrawler.StartOrdering(WebAddress);
 
     return a.exec();
 }

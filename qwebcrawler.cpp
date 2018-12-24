@@ -10,6 +10,10 @@ QWebCrawler::QWebCrawler(QObject *parent) :
     this->DownloadedFiles.insert(".png",l);
     this->DownloadedFiles.insert(".mp3",l);
     this->DownloadedFiles.insert(".mp4",l);
+
+    this->ProjectPath = "D:/Qt/Qt5.3.2/Tools/QtCreator/bin/build-QWebCrawler-Desktop_Qt_5_3_MinGW_32bit-Debug/debug/";
+
+    this->DirMaker.setPath(this->ProjectPath);
 }
 
 void QWebCrawler::setDownloadLevel(int level)
@@ -22,12 +26,12 @@ int QWebCrawler::getDownloadLevel()
     return this->DownloadLevel;
 }
 
-void QWebCrawler::setHtmlFiles(TTree<THtmlPage> hf)
+void QWebCrawler::setHtmlFiles(TTree<THtmlPage *> hf)
 {
     this->HtmlFiles = hf;
 }
 
-TTree<THtmlPage> QWebCrawler::getHtmlFiles()
+TTree<THtmlPage *> QWebCrawler::getHtmlFiles()
 {
     return this->HtmlFiles;
 }
@@ -52,50 +56,120 @@ mos QWebCrawler::getDownloadedFiles()
     return this->DownloadedFiles;
 }
 
-void QWebCrawler::StartOrdering(QString inlink, int dlevel)
+void QWebCrawler::StartOrdering(QString inlink)
 {
-    TNode<THtmlPage> * n = new TNode<THtmlPage>();
-    THtmlPage first;
+    TNode<THtmlPage *> *n = new TNode<THtmlPage *>();
+    THtmlPage *first = new THtmlPage();
 
-    first.setAddress(inlink);
-    first.DownLoadFile(WebManager,dlevel);
-    first.setNumber(0);
+    //initial level : download the first page by manual     //
+    first->setAddress(inlink);
+    first->setNumber(0);
+    first->DownLoadFile(WebManager);
+    this->ConnectPage(first);
     n->setData(first);
-    this->HtmlFiles.setRoot(n);
-    first.ConnectToWebCrawler(this);
 
-//    this->ExecuteLevelDownloading(this->HtmlFiles.getRoot(),dlevel);
+    // inserting in tree        //
+    this->HtmlFiles.setRoot(n);
 }
 
-void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage> *current, int level)
+void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage *> *current)
 {
     //        QString format;
     int csize = 0;
 
-    if((level < 0) | (current == nullptr))
+    //          inserting the downloaded file in QMap...        //
+    this->DownloadedFiles[".html"].push_back(current->getData()->getHtmlFile());
+//    --DownloadLevel;
+
+    if((this->DownloadLevel < 0) | (current == nullptr))
     {
-        return;
+        //          testing             //
+//        this->printHtmlFiles();
+        this->HtmlFiles.PrintAllTree();
+        //          ========            //
+        exit(0);
+//        return;
     }
 
-    current->getData().ExtractLinksToDownloadQueue();
-    csize = current->getChilds().size();
+
+    //          extracting all links of the page(html code of webpage)    //
+    current->getData()->ExtractLinksToDownloadQueue();
+
+    csize = current->getData()->getDownloadQueue().size();
+
+    QList<QString> dq = current->getData()->getDownloadQueue();
 
     for(int i = 0 ; i < csize ; i++)
     {
-        THtmlPage p;
+        THtmlPage *p = new THtmlPage();
 
-        p.setNumber(i + 1);
-        p.setAddress(current->getData().getDownloadQueue().at(i));
-        p.DownLoadFile(this->WebManager);
+        //      inserting page info     //
+        p->setAddress(dq.at(i));
+        p->setNumber(i + 1);
+
+        //     calling download command for each page  //
+        p->DownLoadFile(this->WebManager);
+        this->ConnectPage(p);
+
+        //   inserting in tree          //
         this->HtmlFiles.Insert(p,current);
-        this->DownloadedFiles[".html"].push_back(p.getHtmlFile());
+
+        //          testing             //
+//        cout <<"Tree size = " << this->HtmlFiles.getSize() << endl;
+//        cout << "Download level = " << this->DownloadLevel << endl;
+        //     ====================     //
     }
 
-    for(int j = 0 ; j < current->getChilds().size() ; j++)
-    {
-        this->ExecuteLevelDownloading(current->getChilds().at(j),level - 1);
-    }
+    //      testing             //
+//    this->printHtmlFiles();
+    //      ======              //
+
     //          creating directory for downloadedfiles...       //
+    this->MakeDirectory(current->getData()->getAddress(),current->getData()->getHtmlFile());
+}
+
+void QWebCrawler::ConnectPage(THtmlPage *hp)
+{
+    this->connect(hp,SIGNAL(ProcessDownloadedFile(THtmlPage*)),this,SLOT(StartLevelDownloading(THtmlPage*)));
+}
+
+void QWebCrawler::MakeDirectory(QString address, QByteArray *htmlfile)
+{
+    address = address.remove("https://");
+    //          testing             //
+//    cout << "address: " << address.toStdString() << endl;
+//    cout << "file: " << htmlfile << endl;
+    //          =======             //
+
+    QString filepath = this->ProjectPath + "QDLFiles/" + address;
+    this->DirMaker.mkpath(filepath);
+
+    //          testing             //
+//    cout <<"filepath: " << filepath.toStdString() << endl;
+    //          =======             //
+
+
+    //inserting html file in directory...       //
+    QFile file(filepath.append("dir.html"));
+    QTextStream fd(&file);
+
+    file.open(QIODevice::WriteOnly);
+
+//    fd << *htmlfile << endl;
+
+    for(int i = 0 ; i < htmlfile->size() ; i++)
+    {
+        fd << htmlfile->at(i);
+    }
+
+    file.close();
+}
+
+void QWebCrawler::StartLevelDownloading(THtmlPage *pag)
+{
+    TNode<THtmlPage *> *g = this->HtmlFiles.Find(pag);
+
+    this->ExecuteLevelDownloading(g);
 }
 
 //void QWebCrawler::NewFound()
