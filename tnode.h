@@ -36,7 +36,7 @@ public:
         return this->Father;
     }
 
-    void setData(T & dat)
+    void setData(T dat)
     {
         this->Data = dat;
     }
@@ -55,6 +55,7 @@ public:
         TNode<T> * nn = new TNode<T>();
 
         nn->setData(a);
+        nn->setFather(this);
         this->Childs.push_back(nn);
     }
 

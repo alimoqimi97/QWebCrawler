@@ -26,8 +26,8 @@ class THtmlPage : public QObject
     Q_OBJECT
 private:
     QNetworkReply * dwlutil;
-    int Number;
     QQueue<QString> DownloadQueue;
+    int Depth;
     QString Address;
     QByteArray * HtmlFile;
 public:
@@ -41,8 +41,11 @@ public:
     void setDwlUtil(QNetworkReply * du);
     QNetworkReply * getDwlUtil() const;
 
-    void setNumber(int n);
-    int getNumber() const;
+    void setDepth(int depth);
+    int getDepth() const;
+
+//    void setNumber(int n);
+//    int getNumber() const;
 
     void setDownloadQueue(QQueue<QString> & dq);
     QQueue<QString> getDownloadQueue() const;

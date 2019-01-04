@@ -1,17 +1,17 @@
 #include "thtmlpage.h"
 
-THtmlPage::THtmlPage() :dwlutil(nullptr),Number(0),HtmlFile(nullptr)
+THtmlPage::THtmlPage() :dwlutil(nullptr),Depth(0),HtmlFile(nullptr)
 {
-//    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
-//    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
-//    this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
-//    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
+    //    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+    //    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
+    //    this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
+    //    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(AfterDownload()));
 }
 
 THtmlPage::THtmlPage(const THtmlPage &other,QObject * parent) :QObject(parent)
 {
     this->dwlutil = other.getDwlUtil();
-    this->Number = other.getNumber();
+    this->Depth = other.getDepth();
     this->DownloadQueue = other.getDownloadQueue();
     this->Address = other.getAddress();
     this->HtmlFile = other.getHtmlFile();
@@ -20,7 +20,7 @@ THtmlPage::THtmlPage(const THtmlPage &other,QObject * parent) :QObject(parent)
 THtmlPage THtmlPage::operator=(THtmlPage &other)
 {
     this->dwlutil = other.getDwlUtil();
-    this->Number = other.getNumber();
+    this->Depth = other.getDepth();
     this->DownloadQueue = other.getDownloadQueue();
     this->Address = other.getAddress();
     this->HtmlFile = other.getHtmlFile();
@@ -40,15 +40,25 @@ QNetworkReply *THtmlPage::getDwlUtil() const
     return this->dwlutil;
 }
 
-void THtmlPage::setNumber(int n)
+void THtmlPage::setDepth(int depth)
 {
-    this->Number = n;
+    this->Depth = depth;
 }
 
-int THtmlPage::getNumber() const
+int THtmlPage::getDepth() const
 {
-    return this->Number;
+    return this->Depth;
 }
+
+//void THtmlPage::setNumber(int n)
+//{
+//    this->Number = n;
+//}
+
+//int THtmlPage::getNumber() const
+//{
+//    return this->Number;
+//}
 
 void THtmlPage::setDownloadQueue(QQueue<QString> &dq)
 {
@@ -85,7 +95,7 @@ QList<QString> THtmlPage::getLinks()
     QString pattern = "href([*]|\n)*?=([*]|\n)*?";
     QString p = "(.*?)";
     QList<QString> li;
-//    int i = 0;
+    //    int i = 0;
 
     p.prepend('"');
     p.append('"');
@@ -93,9 +103,11 @@ QList<QString> THtmlPage::getLinks()
     QRegularExpression reg(pattern);
 
     //          testing             //
-    if(this->HtmlFile == nullptr)
+    if(this->HtmlFile->isEmpty())
     {
-        cout << "file isn't downloaded..." << endl;
+        cout << endl;
+        cout << "Warning: file isn't downloaded..." << endl;
+        cout << "The address of current page is: " << this->Address.toStdString() << endl;
         exit(0);
     }
     //          =======             //
@@ -112,15 +124,15 @@ QList<QString> THtmlPage::getLinks()
         }
     }
 
-//    QRegularExpressionMatch matched;
+    //    QRegularExpressionMatch matched;
 
-//    matched = reg.match(*HtmlFile);
+    //    matched = reg.match(*HtmlFile);
 
-//    while(matched.hasMatch())
-//    {
-//        li.push_back(matched.captured(i));
-//        i++;
-//    }
+    //    while(matched.hasMatch())
+    //    {
+    //        li.push_back(matched.captured(i));
+    //        i++;
+    //    }
 
     return li;
 }
@@ -171,7 +183,7 @@ void THtmlPage::NetworkErrorOccured()
     cout << "Network error occured" << endl;
     cout << "check your internet connection...!" << endl;
     cout << endl;
-//    exit(0);
+    //    exit(0);
 }
 
 void THtmlPage::SslErrorOccured()
@@ -182,32 +194,25 @@ void THtmlPage::SslErrorOccured()
 
 void THtmlPage::AfterDownload(QNetworkReply * reply)
 {
-//    if(reply->error() != QNetworkReply ::NoError)
-//    {
-//        cout << reply->errorString().toStdString();
-//    }
-//    else
-//    {
-        QByteArray * b = new QByteArray();
+    QByteArray * b = new QByteArray();
 
-        this->dwlutil = reply;
-        cout << "Download finished..." << endl;
+    this->dwlutil = reply;
+    cout << "Download finished..." << endl;
 
-        *b = this->dwlutil->readAll();
-        this->HtmlFile = b;
-        emit ProcessDownloadedFile(this);
+    *b = this->dwlutil->readAll();
+    this->HtmlFile = b;
+    emit ProcessDownloadedFile(this);
 
-//        dwlutil->deleteLater();
-//    }
+    //        dwlutil->deleteLater();
 }
 
 
 QTextStream &operator<<(QTextStream &sout, THtmlPage &p)
 {
-    sout << "Number = " << p.getNumber() << endl;
+    sout << "Depth = " << p.getDepth() << endl;
     sout << "Address = " << p.getAddress() << endl;
     sout << "HtmlCode = " << p.getHtmlFile() <<  endl ;
-//    p.PrintHtmlCode();
+    //    p.PrintHtmlCode();
 
     return sout;
 }
