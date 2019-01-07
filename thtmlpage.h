@@ -30,6 +30,10 @@ private:
     int Depth;
     QString Address;
     QByteArray * HtmlFile;
+    int Number;
+
+    QNetworkAccessManager * mng;
+
 public:
     THtmlPage();
     THtmlPage(const THtmlPage &other,QObject *parent = 0);
@@ -38,14 +42,29 @@ public:
 
     //      get and set methods     //
 
+    void setNumber(int num)
+    {
+        this->Number = num;
+    }
+    int getNumber()
+    {
+        return this->Number;
+    }
+
+    void setMng(QNetworkAccessManager * m)
+    {
+        this->mng = m;
+    }
+    QNetworkAccessManager *getMng()
+    {
+        return this->mng;
+    }
+
     void setDwlUtil(QNetworkReply * du);
     QNetworkReply * getDwlUtil() const;
 
     void setDepth(int depth);
     int getDepth() const;
-
-//    void setNumber(int n);
-//    int getNumber() const;
 
     void setDownloadQueue(QQueue<QString> & dq);
     QQueue<QString> getDownloadQueue() const;
@@ -59,9 +78,9 @@ public:
     //      =================       //
 
     //          public methods      //
-    QList<QString> getLinks();
-    void ExtractLinksToDownloadQueue();
-    void DownLoadFile(QNetworkAccessManager & manager);
+    QList<QString> getLinks(QString rootaddress);
+    void ExtractLinksToDownloadQueue(QString rtad);
+    void DownLoadFile(QNetworkAccessManager * manager);
     void PrintHtmlCode();
 
     //          =============       //

@@ -3,6 +3,7 @@
 QWebCrawler::QWebCrawler(QObject *parent) :
     QObject(parent),DownloadLevel(0)
 {
+    this->WebManager = new QNetworkAccessManager();
     QList<QByteArray *> l;
 
     this->DownloadedFiles.insert(".html",l);
@@ -80,32 +81,26 @@ void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage *> *current)
     //          inserting the downloaded file in QMap...        //
     this->DownloadedFiles[".html"].push_back(current->getData()->getHtmlFile());
 
+    //      under testing part          //
+    this->disconnect(this->WebManager,SIGNAL(finished(QNetworkReply*)),current->getData(),SLOT(AfterDownload(QNetworkReply*)));
+    //      -----------------           //
 
     //          testing             //
-    cout <<"current depth: " << current->getData()->getDepth() << endl;
-    cout << "download level: " << this->DownloadLevel << endl;
+//    cout <<"current depth: " << current->getData()->getDepth() << endl;
+//    cout << "download level: " << this->DownloadLevel << endl;
 //    cout <<"current father: " << current->getFather() << endl;
-    cout << "Tree size: " << this->HtmlFiles.getSize() << endl;
+//    cout << "Tree size: " << this->HtmlFiles.getSize() << endl;
     //          =======             //
 
-    if((current->getData()->getDepth() > this->DownloadLevel) | (current == nullptr))
+    if((current->getData()->getDepth() == this->DownloadLevel) | (current == nullptr))
     {
         exit(0);
     }
 
     //          extracting all links of the page(html code of webpage)    //
-    current->getData()->ExtractLinksToDownloadQueue();
+    current->getData()->ExtractLinksToDownloadQueue(this->HtmlFiles.getRoot()->getData()->getAddress());
 
     csize = current->getData()->getDownloadQueue().size();
-
-    //          testing         //
-//    cout << "download Queue size: " << current->getData()->getDownloadQueue().size() << endl;
-//    if(csize == 0)
-//    {
-//        cout << "wow download queue is empty." << endl;
-//        exit(0);
-//    }
-    //          =======         //
 
     QList<QString> dq = current->getData()->getDownloadQueue();
 
@@ -116,7 +111,8 @@ void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage *> *current)
         //      inserting page info     //
         p->setAddress(dq.at(i));
         p->setDepth(current->getData()->getDepth() + 1);
-
+        p->setNumber(i + 1);
+        p->setMng(this->WebManager);
 
         //     calling download command for each page   //
         p->DownLoadFile(this->WebManager);
@@ -152,7 +148,7 @@ void QWebCrawler::MakeDirectory(QString address, QByteArray *htmlfile)
 
 
     //inserting html file in directory...       //
-    QFile file(filepath.append("dir.html"));
+    QFile file(filepath.append("file.html"));
     QTextStream fd(&file);
 
     file.open(QIODevice::WriteOnly);

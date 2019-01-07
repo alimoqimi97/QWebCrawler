@@ -24,7 +24,7 @@ private:
     TTree<THtmlPage *> HtmlFiles;
     QList<QString> DownloadedLinks;
     QMap<QString,QList<QByteArray *>> DownloadedFiles;
-    QNetworkAccessManager WebManager;
+    QNetworkAccessManager *WebManager;
     QDir DirMaker;
     QString ProjectPath;
 

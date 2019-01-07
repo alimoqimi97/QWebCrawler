@@ -1,6 +1,6 @@
 #include "thtmlpage.h"
 
-THtmlPage::THtmlPage() :dwlutil(nullptr),Depth(0),HtmlFile(nullptr)
+THtmlPage::THtmlPage() :dwlutil(nullptr),Depth(0),HtmlFile(nullptr),Number(0)
 {
     //    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
     //    this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(SslErrorOccured()));
@@ -90,7 +90,7 @@ QByteArray *THtmlPage::getHtmlFile() const
     return this->HtmlFile;
 }
 
-QList<QString> THtmlPage::getLinks()
+QList<QString> THtmlPage::getLinks(QString rootaddress)
 {
     QString pattern = "href([*]|\n)*?=([*]|\n)*?";
     QString p = "(.*?)";
@@ -103,13 +103,13 @@ QList<QString> THtmlPage::getLinks()
     QRegularExpression reg(pattern);
 
     //          testing             //
-    if(this->HtmlFile->isEmpty())
-    {
-        cout << endl;
-        cout << "Warning: file isn't downloaded..." << endl;
-        cout << "The address of current page is: " << this->Address.toStdString() << endl;
-        exit(0);
-    }
+    //    if(this->HtmlFile->isEmpty())
+    //    {
+    //        cout << endl;
+    //        cout << "Warning: file isn't downloaded..." << endl;
+    //        cout << "The address of current page is: " << this->Address.toStdString() << endl;
+    //        exit(0);
+    //    }
     //          =======             //
 
     QRegularExpressionMatchIterator itr = reg.globalMatch(*HtmlFile);
@@ -120,7 +120,15 @@ QList<QString> THtmlPage::getLinks()
 
         if(m.hasMatch())
         {
-            li.push_back(m.captured(3));
+            QString ns = m.captured(3);
+
+            if(!ns.contains("https:") && !ns.contains("http:"))
+            {
+                ns.prepend(rootaddress);
+            }
+            //            ns.prepend(rootaddress + '/');
+            li.push_back(ns);
+            //            li.push_back(m.captured(3));
         }
     }
 
@@ -137,9 +145,9 @@ QList<QString> THtmlPage::getLinks()
     return li;
 }
 
-void THtmlPage::ExtractLinksToDownloadQueue()
+void THtmlPage::ExtractLinksToDownloadQueue(QString rtad)
 {
-    QList<QString> links = this->getLinks();
+    QList<QString> links = this->getLinks(rtad);
 
     for(QString l : links)
     {
@@ -147,18 +155,21 @@ void THtmlPage::ExtractLinksToDownloadQueue()
     }
 }
 
-void THtmlPage::DownLoadFile(QNetworkAccessManager &manager)
+void THtmlPage::DownLoadFile(QNetworkAccessManager *manager)
 {
     QNetworkRequest rq;
 
     rq.setUrl(QUrl(this->Address));
     rq.setRawHeader("User-Agent","MyOwnBrowser 1.0");
-    this->dwlutil = manager.get(rq);
+
+    this->connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(AfterDownload(QNetworkReply*)));
+    this->dwlutil = manager->get(rq);
 
     this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+//    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(ReplyFinished()));
     this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(NetworkErrorOccured()));
     this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
-    this->connect(&manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(AfterDownload(QNetworkReply*)));
+
 }
 
 void THtmlPage::PrintHtmlCode()
@@ -199,11 +210,33 @@ void THtmlPage::AfterDownload(QNetworkReply * reply)
     this->dwlutil = reply;
     cout << "Download finished..." << endl;
 
-    *b = this->dwlutil->readAll();
+//    *b = this->dwlutil->readAll();
+    *b = reply->readAll();
     this->HtmlFile = b;
+
+    //      testing         //
+    QTextStream qprint(stdout);
+
+    cout << "the page address: " << this->Address.toStdString() << endl;
+
+    if(b->isEmpty())
+    {
+        cout << "Sorry The file is empty" << endl;
+    }
+    else
+    {
+        for(int t = 0 ; t < b->size() ; t++)
+        {
+            qprint << b->at(t);
+        }
+    }
+//    exit(0);
+    //      -------         //
+
+
     emit ProcessDownloadedFile(this);
 
-    //        dwlutil->deleteLater();
+    dwlutil->deleteLater();
 }
 
 
