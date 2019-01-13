@@ -81,16 +81,40 @@ void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage *> *current)
     //          inserting the downloaded file in QMap...        //
     this->DownloadedFiles[".html"].push_back(current->getData()->getHtmlFile());
 
-    //      under testing part          //
-    this->disconnect(this->WebManager,SIGNAL(finished(QNetworkReply*)),current->getData(),SLOT(AfterDownload(QNetworkReply*)));
-    //      -----------------           //
+    //  disconnecting current page from webmanager for preventing of redownloading of file..
+    current->getData()->DisconnectPage();
+//    this->disconnect(this->WebManager,SIGNAL(finished(QNetworkReply*)),current->getData(),SLOT(AfterDownload(QNetworkReply*)));
 
     //          testing             //
+//    cout << "page Number: " << current->getData()->getNumber() << endl;
 //    cout <<"current depth: " << current->getData()->getDepth() << endl;
 //    cout << "download level: " << this->DownloadLevel << endl;
 //    cout <<"current father: " << current->getFather() << endl;
 //    cout << "Tree size: " << this->HtmlFiles.getSize() << endl;
     //          =======             //
+
+
+    //      testing         //
+//    QTextStream q(stdout);
+
+//    if(current->getData()->getNumber() == 1)
+//    {
+//        if(current->getData()->getHtmlFile() ==nullptr)
+//        {
+//            cout << "file isn't downloaded" << endl;
+//            exit(0);
+//        }
+//        for(int i = 0 ; i < current->getData()->getHtmlFile()->size() ; i++)
+//        {
+//            q << current->getData()->getHtmlFile()->at(i);
+//        }
+//        q << endl;
+//        exit(0);
+//    }
+    //      -------         //
+
+
+
 
     if((current->getData()->getDepth() == this->DownloadLevel) | (current == nullptr))
     {
@@ -123,7 +147,10 @@ void QWebCrawler::ExecuteLevelDownloading(TNode<THtmlPage *> *current)
     }
 
     //          creating directory for downloadedfiles...       //
-    this->MakeDirectory(current->getData()->getAddress(),current->getData()->getHtmlFile());
+    if(!current->getData()->getHtmlFile()->isEmpty())
+    {
+        this->MakeDirectory(current->getData()->getAddress(),current->getData()->getHtmlFile());
+    }
 }
 
 void QWebCrawler::ConnectPage(THtmlPage *hp)
@@ -133,27 +160,25 @@ void QWebCrawler::ConnectPage(THtmlPage *hp)
 
 void QWebCrawler::MakeDirectory(QString address, QByteArray *htmlfile)
 {
+    QString filename;
+
     address = address.remove("https://");
-    //          testing             //
-//    cout << "address: " << address.toStdString() << endl;
-//    cout << "file: " << htmlfile << endl;
-    //          =======             //
 
     QString filepath = this->ProjectPath + "Downloaded/" + address;
     this->DirMaker.mkpath(filepath);
 
-    //          testing             //
-//    cout <<"filepath: " << filepath.toStdString() << endl;
-    //          =======             //
+    filename = this->DirMaker.dirName();
+    filename.append(".html");
 
+    //          testing         //
+//    cout << "filename: " << filename.toStdString() << endl;
+    //          -------         //
 
     //inserting html file in directory...       //
-    QFile file(filepath.append("file.html"));
+    QFile file(filepath.append(filename));
     QTextStream fd(&file);
 
     file.open(QIODevice::WriteOnly);
-
-//    fd << *htmlfile << endl;
 
     for(int i = 0 ; i < htmlfile->size() ; i++)
     {
@@ -161,6 +186,19 @@ void QWebCrawler::MakeDirectory(QString address, QByteArray *htmlfile)
     }
 
     file.close();
+
+    //      creating text file of html datas    //
+    QFile txtfile(filepath.append(".txt"));
+    QTextStream tf(&txtfile);
+
+    txtfile.open(QIODevice::WriteOnly);
+
+    for(int i = 0 ; i < htmlfile->size() ; i++)
+    {
+        tf << htmlfile->at(i);
+    }
+
+    txtfile.close();
 }
 
 void QWebCrawler::StartLevelDownloading(THtmlPage *pag)

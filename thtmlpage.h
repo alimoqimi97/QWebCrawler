@@ -13,6 +13,7 @@
 #include <QMap>
 #include <QObject>
 #include <iostream>
+#include <QSslConfiguration>
 using namespace std;
 
 class QWebCrawler;
@@ -82,22 +83,28 @@ public:
     void ExtractLinksToDownloadQueue(QString rtad);
     void DownLoadFile(QNetworkAccessManager * manager);
     void PrintHtmlCode();
+    void DisconnectPage();
 
     //          =============       //
+
+//    under testing part        //
+    //          destructor          //
+    ~THtmlPage()
+    {
+        delete this->HtmlFile;
+    }
+//---------------               //
 signals:
 
     void downloadFinished(int f);
     void ProcessDownloadedFile(THtmlPage *page);
-
-    //          testing             //
-//    void End();
-    //          =======             //
 
 public slots:
     void NewFound();
     void NetworkErrorOccured();
     void SslErrorOccured();
     void AfterDownload(QNetworkReply *reply);
+    void ReplyFinished();
 };
 
 QTextStream & operator<<(QTextStream & sout,THtmlPage & p);

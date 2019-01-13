@@ -158,15 +158,35 @@ void THtmlPage::ExtractLinksToDownloadQueue(QString rtad)
 void THtmlPage::DownLoadFile(QNetworkAccessManager *manager)
 {
     QNetworkRequest rq;
+    QUrl url(this->Address);
 
-    rq.setUrl(QUrl(this->Address));
+    url.setScheme("https");
+
+//    if(.contains("https"))
+//    {
+//        url.setScheme("https");
+//    }
+//    else if(this->Address.contains("http"))
+//    {
+//        url.setScheme("http");
+//    }
+
+//    rq.setUrl(QUrl(this->Address));
+    rq.setUrl(url);
     rq.setRawHeader("User-Agent","MyOwnBrowser 1.0");
 
-    this->connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(AfterDownload(QNetworkReply*)));
+//    this->connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(AfterDownload(QNetworkReply*)));
     this->dwlutil = manager->get(rq);
 
+    //      under testing part          //
+//    QSslConfiguration conf = QSslConfiguration ::defaultConfiguration();
+
+//    conf.setProtocol(QSsl ::TlsV1_0);
+//    this->dwlutil->setSslConfiguration(conf);
+    //      -------------------         //
+
     this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
-//    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(ReplyFinished()));
+    this->connect(dwlutil,SIGNAL(finished()),this,SLOT(ReplyFinished()));
     this->connect(dwlutil,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(NetworkErrorOccured()));
     this->connect(dwlutil,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrorOccured()));
 
@@ -183,18 +203,42 @@ void THtmlPage::PrintHtmlCode()
     t << endl;
 }
 
+void THtmlPage::DisconnectPage()
+{
+    this->disconnect(this->dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+    this->disconnect(this->dwlutil,SIGNAL(finished()),this,SLOT(ReplyFinished()));
+}
+
 void THtmlPage::NewFound()
 {
     cout << "New file for download is available..." << endl;
+
+    QByteArray *bit = new QByteArray();
+
+    //      inserting downloaded data in page.      //
+    *bit = this->dwlutil->readAll();
+
+    if(this->HtmlFile == nullptr)
+    {
+        this->HtmlFile = bit;
+    }
+    else
+    {
+        this->HtmlFile->append(*bit);
+    }
 }
 
 void THtmlPage::NetworkErrorOccured()
 {
     cout << endl;
     cout << "Network error occured" << endl;
-    cout << "check your internet connection...!" << endl;
+    cout << dwlutil->errorString().toStdString() << endl;
+//    cout << "check your internet connection...!" << endl;
     cout << endl;
-    //    exit(0);
+
+    //          under testing part      //
+//    this->connect(dwlutil,SIGNAL(readyRead()),this,SLOT(NewFound()));
+
 }
 
 void THtmlPage::SslErrorOccured()
@@ -205,40 +249,65 @@ void THtmlPage::SslErrorOccured()
 
 void THtmlPage::AfterDownload(QNetworkReply * reply)
 {
-    QByteArray * b = new QByteArray();
+//    QByteArray * b = new QByteArray();
 
-    this->dwlutil = reply;
     cout << "Download finished..." << endl;
 
-//    *b = this->dwlutil->readAll();
-    *b = reply->readAll();
-    this->HtmlFile = b;
+    // inserting downloaded data in page    //
+//    *b = reply->readAll();
+//    this->HtmlFile->append(*b);
 
-    //      testing         //
-    QTextStream qprint(stdout);
+    //          testing         //
+//    QTextStream q(stdout);
 
-    cout << "the page address: " << this->Address.toStdString() << endl;
-
-    if(b->isEmpty())
-    {
-        cout << "Sorry The file is empty" << endl;
-    }
-    else
-    {
-        for(int t = 0 ; t < b->size() ; t++)
-        {
-            qprint << b->at(t);
-        }
-    }
+//    for(int i = 0 ; i < this->HtmlFile->size(); i++)
+//    {
+//        q << this->HtmlFile->at(i);
+//    }
 //    exit(0);
-    //      -------         //
-
+    //          --------        //
 
     emit ProcessDownloadedFile(this);
 
-    dwlutil->deleteLater();
+//    dwlutil->deleteLater();
 }
 
+void THtmlPage::ReplyFinished()
+{
+    QByteArray *b = new QByteArray();
+
+    cout << "Reply finished..." << endl;
+
+    //          testing         //
+    cout <<"page: " << this->getAddress().toStdString() << endl;
+    cout << "Number: " << this->getNumber() << endl;
+    //          --------        //
+
+
+    *b = this->dwlutil->readAll();
+    this->HtmlFile->append(*b);
+
+
+    //          testing         //
+//    QTextStream q(stdout);
+
+//    if(this->HtmlFile == nullptr)
+//    {
+//        cout << "file isn't downloaded..." << endl;
+//        exit(0);
+//    }
+
+//    for(int i = 0 ; i < this->HtmlFile->size() ; i++)
+//    {
+//        q << this->HtmlFile->at(i);
+//    }
+//    q << endl;
+//    exit(0);
+    //          ---------           //
+
+    //      under testing part      //
+    this->ProcessDownloadedFile(this);
+}
 
 QTextStream &operator<<(QTextStream &sout, THtmlPage &p)
 {
